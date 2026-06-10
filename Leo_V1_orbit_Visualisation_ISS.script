@@ -47,8 +47,13 @@ Create GroundTrackPlot MyGroundTrack;
 MyGroundTrack.Add             = {Sat};
 MyGroundTrack.CentralBody     = Earth;
 
+Create ReportFile rf;
+rf.Filename = 'D:\Space Softwares\GMAT Project\output\ISS_data.txt';
+rf.Add      = {Sat.UTCGregorian, Sat.Earth.Latitude, Sat.Earth.Longitude};
+
 %--- MISSION SEQUENCE ---
 BeginMissionSequence;
 
 Propagate EarthProp(Sat) {Sat.ElapsedDays = 1};
 % Propagates for exactly 1 day  clean and predictable
+
