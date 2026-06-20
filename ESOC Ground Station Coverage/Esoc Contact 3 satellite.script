@@ -1,0 +1,108 @@
+% Day 3 - Walker Delta Constellation - 3 satellites, 120 deg RAAN spacing
+Create Spacecraft Sat1;
+Sat1.DateFormat        = UTCGregorian;
+Sat1.Epoch             = '01 Jan 2025 00:00:00.000';
+Sat1.CoordinateSystem  = EarthMJ2000Eq;
+Sat1.DisplayStateType  = Keplerian;
+Sat1.SMA               = 7178;     % 800 km altitude - good for constellations
+Sat1.ECC               = 0.001;
+Sat1.INC               = 55;
+Sat1.RAAN              = 0;
+Sat1.AOP               = 0;
+Sat1.TA                = 0;
+Sat1.DryMass           = 500;
+
+Create Spacecraft Sat2;
+Sat2.DateFormat        = UTCGregorian;
+Sat2.Epoch             = '01 Jan 2025 00:00:00.000';
+Sat2.CoordinateSystem  = EarthMJ2000Eq;
+Sat2.DisplayStateType  = Keplerian;
+Sat2.SMA               = 7178;
+Sat2.ECC               = 0.001;
+Sat2.INC               = 55;
+Sat2.RAAN              = 120;      % 120 deg spacing
+Sat2.AOP               = 0;
+Sat2.TA                = 0;
+Sat2.DryMass           = 500;
+
+Create Spacecraft Sat3;
+Sat3.DateFormat        = UTCGregorian;
+Sat3.Epoch             = '01 Jan 2025 00:00:00.000';
+Sat3.CoordinateSystem  = EarthMJ2000Eq;
+Sat3.DisplayStateType  = Keplerian;
+Sat3.SMA               = 7178;
+Sat3.ECC               = 0.001;
+Sat3.INC               = 55;
+Sat3.RAAN              = 240;      % 240 deg spacing
+Sat3.AOP               = 0;
+Sat3.TA                = 0;
+Sat3.DryMass           = 500;
+
+Create ForceModel EarthFM;
+EarthFM.CentralBody                = Earth;
+EarthFM.PrimaryBodies              = {Earth};
+EarthFM.PointMasses                = {Luna, Sun};
+EarthFM.SRP                        = On;
+EarthFM.GravityField.Earth.Degree  = 4;
+EarthFM.GravityField.Earth.Order   = 4;
+
+Create Propagator EarthProp;
+EarthProp.FM              = EarthFM;
+EarthProp.Type            = RungeKutta89;
+EarthProp.InitialStepSize = 60;
+
+Create OrbitView MyView;
+MyView.Add             = {Sat1, Sat2, Sat3, Earth};
+MyView.ShowLabels      = true;
+MyView.EnableStars     = On;
+
+Create GroundTrackPlot MyTrack;
+MyTrack.Add            = {Sat1, Sat2, Sat3};
+MyTrack.CentralBody    = Earth;
+
+% One ReportFile per satellite - cleaner for Python parsing
+Create ReportFile rf1;
+rf1.Filename     = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat1_data.txt';
+rf1.Add          = {Sat1.ElapsedSecs, Sat1.Earth.Latitude, Sat1.Earth.Longitude};
+rf1.WriteHeaders = true;
+
+Create ReportFile rf2;
+rf2.Filename     = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat2_data.txt';
+rf2.Add          = {Sat2.ElapsedSecs, Sat2.Earth.Latitude, Sat2.Earth.Longitude};
+rf2.WriteHeaders = true;
+
+Create ReportFile rf3;
+rf3.Filename     = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat3_data.txt';
+rf3.Add          = {Sat3.ElapsedSecs, Sat3.Earth.Latitude, Sat3.Earth.Longitude};
+rf3.WriteHeaders = true;
+
+% --- Ground station coverage from all 3 sats ---
+Create GroundStation ESOC;
+ESOC.CentralBody           = Earth;
+ESOC.StateType             = Spherical;
+ESOC.HorizonReference      = Ellipsoid;
+ESOC.Location1             = 49.8728;
+ESOC.Location2             = 8.6512;
+ESOC.Location3             = 0.144;
+ESOC.MinimumElevationAngle = 5;
+
+Create ContactLocator cl;
+cl.Target            = Sat1;
+cl.Observers         = {ESOC};
+cl.Filename          = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat1_contacts.txt';
+cl.RunMode           = Automatic;
+
+Create ContactLocator cl2;
+cl2.Target           = Sat2;
+cl2.Observers        = {ESOC};
+cl2.Filename         = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat2_contacts.txt';
+cl2.RunMode          = Automatic;
+
+Create ContactLocator cl3;
+cl3.Target           = Sat3;
+cl3.Observers        = {ESOC};
+cl3.Filename         = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\Walker_Sat3_contacts.txt';
+cl3.RunMode          = Automatic;
+
+BeginMissionSequence;
+Propagate EarthProp(Sat1, Sat2, Sat3) {Sat1.ElapsedDays = 3};
